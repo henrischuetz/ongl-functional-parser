@@ -1,0 +1,3 @@
+#helloWorld = -1392,
+#helloWorld2.cicmp_customvar = 'my string',
+(1 == #myVar) * (2 + 2)
