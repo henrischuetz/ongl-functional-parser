@@ -1,4 +1,4 @@
-ogln.txt
-parsetree.txt
-notes
-ognl.txt
+node_modules
+*.txt
+*.temp
+*.log

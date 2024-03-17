@@ -1,0 +1,25 @@
+{
+  "name": "parser-lib",
+  "version": "1.0.0",
+  "description": "functional parser for shits and giggles",
+  "main": "ognlParser.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/henrischuetz/ongl-functional-parser.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/henrischuetz/ongl-functional-parser/issues"
+  },
+  "homepage": "https://github.com/henrischuetz/ongl-functional-parser#readme",
+  "devDependencies": {
+    "jest": "^29.7.0"
+  }
+}
