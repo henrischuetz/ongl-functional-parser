@@ -1,7 +1,7 @@
 const fs = require(`fs`)
 const path = require(`path`)
-const { parse, combineParser, whiteSpace, stringParser, oneOrMore, anyofChars, oneOrZero, orElseParser, resultSet } = require('./parselib')
-const tokens = require('./tokens')
+const { parse, combineParser, whiteSpace, stringParser, oneOrMore, anyofChars, oneOrZero, orElseParser, resultSet } = require('../lib/parselib')
+const tokens = require('../lib/tokens')
 
 
 function excludeChars(...args) {
