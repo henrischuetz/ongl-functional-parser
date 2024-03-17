@@ -37,3 +37,7 @@ test('parse empty string', ()=>{
 test('parse null', ()=>{
     expect(parseChar(null)).toStrictEqual(resultSet('a', '', null))
 })
+
+test('parse blank', ()=>{
+    expect(parse(' ')(' ')).toStrictEqual(resultSet(' ', ' ', ''))
+})
