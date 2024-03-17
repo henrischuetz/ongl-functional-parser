@@ -1,4 +1,4 @@
-const { zero, resultSet } = require('../../lib/parselib')
+const { zero, resultSet } = require('../../../lib/parselib')
 
 const zeroParser = zero()
 

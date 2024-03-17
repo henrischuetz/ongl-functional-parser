@@ -1,4 +1,4 @@
-const { parse, combineParser, resultSet } = require('../../lib/parselib')
+const { parse, combineParser, resultSet } = require('../../../lib/parselib')
 
 
 const abParser = combineParser(parse('a'), parse('b'))
@@ -21,6 +21,6 @@ test('parse only first char of ab', ()=>{
     expect(abParser('ac')).toStrictEqual(resultSet('ab', '', 'ac'))
 })
 
-test('parse only second car of ab', ()=>{
+test('parse only second char of ab', ()=>{
     expect(abParser('cb')).toStrictEqual(resultSet('ab', '', 'cb'))
 })

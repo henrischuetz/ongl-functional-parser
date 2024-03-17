@@ -1,4 +1,4 @@
-const { parse, resultSet } = require('../../lib/parselib')
+const { parse, resultSet } = require('../../../lib/parselib')
 
 const parseChar = parse('a')
 
