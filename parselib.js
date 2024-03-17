@@ -1,18 +1,10 @@
 // return types
 // ToDo merge return types into one
 const resultSet = (...args) => {
-    const [matched, remaining] = args
-    return {
-        matched: matched,
-        remaining: remaining
-    }
-}
-
-const errorSet = (...args) => {
-    const [expected, found, remaining] = args
+    const [expected, matched, remaining] = args
     return {
         expected: expected,
-        found: found,
+        matched: matched,
         remaining: remaining
     }
 }
@@ -22,9 +14,9 @@ function parse(charToMatch) {
     return (input) => {
 
         if (input[0] === charToMatch) {
-            return resultSet(charToMatch, input.substr(1))
+            return resultSet(charToMatch, charToMatch, input.substr(1))
         } else {
-            return errorSet(charToMatch, input[0], input)
+            return resultSet(charToMatch, "", input)
         }
     }
 }
@@ -39,7 +31,7 @@ function combineParser(...parses) {
     return parses.reduce((parse1, parse2) => {
         return (input) => {
             const result1 = parse1(input)
-            if (result1.matched === undefined) {
+            if (result1.matched === "") {
                 return result1
             }
             const result2 = parse2(result1.remaining)
@@ -55,7 +47,7 @@ function orElseParser(parse1, parse2) {
     return (input) => {
         const result = parse1(input)
 
-        if (result.matched === undefined) {
+        if (result.matched === "") {
             return parse2(input)
         }
         return result
@@ -82,9 +74,9 @@ function oneOrMore(parser) {
             if (result.matched) {
                 concat += result.matched
             }
-        } while (result.matched !== undefined)
+        } while (result.matched !== "")
 
-        if (previousResult && previousResult.matched !== undefined) {
+        if (previousResult && previousResult.matched !== "") {
             previousResult.matched = concat
             return previousResult
         }
@@ -111,5 +103,4 @@ module.exports = {
     zero: zero,
     oneOrZero: oneOrZero,
     resultSet: resultSet,
-    errorSet: errorSet
 }

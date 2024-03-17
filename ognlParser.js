@@ -1,6 +1,6 @@
 const fs = require(`fs`)
 const path = require(`path`)
-const { parse, combineParser, whiteSpace, stringParser, oneOrMore, anyofChars, oneOrZero, orElseParser, resultSet, errorSet } = require('./parselib')
+const { parse, combineParser, whiteSpace, stringParser, oneOrMore, anyofChars, oneOrZero, orElseParser, resultSet } = require('./parselib')
 const tokens = require('./tokens')
 
 
@@ -52,7 +52,7 @@ function block(input) {
 
 	// is it the start of a block?
 	const firstChar = parse('(')(input)
-	if (firstChar.matched === undefined) {
+	if (firstChar.matched === "") {
 		return errorSet('(', input[0], input)
 	}
 
@@ -65,7 +65,7 @@ function block(input) {
 		alreadyParsed += middlePart.matched
 		// no closing tag
 		if (middlePart.remaining === '') {
-			return errorSet(')', middlePart.matched, input)
+			return resultSet(')', "", middlePart.matched)
 		}
 
 		// counting tags
