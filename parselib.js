@@ -1,4 +1,5 @@
 // return types
+// ToDo merge return types into one
 const resultSet = (...args) => {
     const [matched, remaining] = args
     return {
@@ -53,7 +54,7 @@ function combineParser(...parses) {
 function orElseParser(parse1, parse2) {
     return (input) => {
         const result = parse1(input)
-        // console.log(result)
+
         if (result.matched === undefined) {
             return parse2(input)
         }
@@ -105,7 +106,6 @@ module.exports = {
     anyofChars: anyofChars,
     stringParser: stringParser,
     oneOrMore: oneOrMore,
-    anyofChars: anyofChars,
     whiteSpace: whiteSpace,
     oneOrMoreWhiteSpace: oneOrMore(whiteSpace),
     zero: zero,

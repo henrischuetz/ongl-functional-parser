@@ -1,3 +1,2 @@
-((1 == #myVar))
-#helloWorld = -1392,
-#helloWorld2.cicmp_customvar = 'my string',
+#temp = 2
+(#temp == 5 ? #a = 10 : #b = 2)

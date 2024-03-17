@@ -36,7 +36,7 @@ tokens.set('assignment', (string) => {
 tokens.set('assignmentOperator', (string) => {
     return {
         name: "assignmentOperator",
-        value: string[1],
+        value: string,
         children: []
     }
 })
@@ -71,7 +71,21 @@ tokens.set('compare', (string) => {
 tokens.set('block', (string) => {
     return {
         name: "block",
-        value: string.substring(1, string.length - 1),
+        value: string.substring(1,string.length -1),
+        children: []
+    }
+})
+tokens.set('statement', (string) => {
+    return {
+        name: "statement",
+        value: string,
+        children: []
+    }
+})
+tokens.set('questionmark', (string) => {
+    return {
+        name: "questionmark",
+        value: string,
         children: []
     }
 })

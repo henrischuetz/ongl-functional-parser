@@ -1,11 +1,8 @@
 const fs = require(`fs`)
 const path = require(`path`)
 const { parse, combineParser, whiteSpace, stringParser, oneOrMore, anyofChars, oneOrZero, orElseParser, resultSet, errorSet } = require('./parselib')
-const { error } = require('console')
 const tokens = require('./tokens')
 
-
-const ognl = fs.readFileSync(`./ognl.txt`, { encoding: "utf-8" })
 
 function excludeChars(...args) {
 	const chars = []
@@ -18,11 +15,12 @@ function excludeChars(...args) {
 }
 
 
-
 const nonControllCharackters = excludeChars('#', '(', ')', '?', '@', ':', '\n', '\r', '\t', '"', '\'', '=', ' ', ',')
 const unescapedChars = excludeChars('\n', '\r', '\t', '"', '\'')
 const noParenthesis = excludeChars('(', ')')
 const ignoreChars = oneOrMore(anyofChars(' ', '\t', '\n', '\r', ','))
+const questionmark = parse('?')
+const colon = parse(':')
 
 // number stuff
 const digit = anyofChars('1', '2', '3', '4', '5', '6', '7', '8', '9', '0')
@@ -32,18 +30,18 @@ const number = combineParser(oneOrZero(parse('-')), digits, oneOrZero(orElsePars
 
 // ognl specific
 const variablePrefix = parse('#')
-const assignmentOperator = combineParser(whiteSpace, parse('='), whiteSpace)
+const assignmentOperator = combineParser(oneOrZero(whiteSpace), parse('='), oneOrZero(whiteSpace))
 const valTrue = stringParser('true')
 const valFalse = stringParser('false')
 const valNull = stringParser('null')
 const quote = orElseParser(parse('"'), parse('\''))
 const variable = combineParser(variablePrefix, oneOrMore(nonControllCharackters))
 const quotedString = combineParser(quote, oneOrMore(unescapedChars), quote)
-const constant = orElseParser(quotedString, number)
+const constant = [quotedString, number, valNull, valFalse, valTrue].reduce((a, b) => { return orElseParser(a, b) })
 const assignment = combineParser(variable, assignmentOperator, constant)
 const compare = [stringParser('=='), stringParser('!='), parse('<'), parse('>'), stringParser('<='), stringParser('>=')].reduce((a, b) => { return orElseParser(a, b) })
-const expression = combineParser(orElseParser(variable, constant), whiteSpace, compare, whiteSpace, orElseParser(variable, constant))
-
+const expression = combineParser(orElseParser(variable, constant), oneOrZero(whiteSpace), compare, oneOrZero(whiteSpace), orElseParser(variable, constant))
+const statement = combineParser([expression, block, assignment, variable, constant].reduce((a, b) => { return orElseParser(a, b) }), oneOrZero(whiteSpace), questionmark, oneOrZero(whiteSpace), [expression, block, assignment, variable, constant].reduce((a, b) => { return orElseParser(a, b) }))
 
 
 // parsing blocks...
@@ -60,7 +58,6 @@ function block(input) {
 
 	// start counting tags
 	let openingTags = 1
-	console.log(firstChar)
 	let middlePart = oneOrZero(oneOrMore(noParenthesis))(firstChar.remaining)
 	let alreadyParsed = firstChar.matched
 	do {
@@ -77,27 +74,16 @@ function block(input) {
 			alreadyParsed += '('
 		} else if (middlePart.remaining[0] === ')') {
 			openingTags--
+			alreadyParsed += ')'
 
 			if (openingTags === 0) {
-				alreadyParsed += ')'
-				console.log(alreadyParsed)
 				return resultSet(alreadyParsed, middlePart.remaining.substr(1))
 			}
-
-
 		}
 		middlePart = oneOrZero(oneOrMore(noParenthesis))(middlePart.remaining.substr(1))
 
-
 	} while (openingTags > 0)
-
-	return resultSet(alreadyParsed,)
-
 }
-
-// console.log(block("((1 == #myVar)(()()))"))
-// console.log(parse('(')("(1 == #myVar)"))
-
 
 const ognlParsers = {
 	"assignment": assignment,
@@ -108,17 +94,17 @@ const ognlParsers = {
 	"constant": constant,
 	"expression": expression,
 	"compare": compare,
-	"block": block
+	"block": block,
+	"statement": statement,
+	"questionmark": questionmark
 }
-
-
-
 
 const rules = {
 	"ognl": [
+		["statement"],
+		["block"],
 		["assignment"],
-		["expression"],
-		["block"]
+		["expression"]
 	],
 	"block": [
 		["assignment"],
@@ -135,6 +121,24 @@ const rules = {
 		["variable", "assignmentOperator", "constant"],
 		["variable", "assignmentOperator", "variable"]
 	],
+	"statement": [
+		["expression", "questionmark", "assignment"],
+		["block", "questionmark", "assignment"],
+		["assignment", "questionmark", "assignment"],
+		["statement", "questionmark", "assignment"],
+		["expression", "questionmark", "expression"],
+		["block", "questionmark", "expression"],
+		["assignment", "questionmark", "expression"],
+		["statement", "questionmark", "expression"],
+		["expression", "questionmark", "block"],
+		["block", "questionmark", "block"],
+		["assignment", "questionmark", "block"],
+		["statement", "questionmark", "block"],
+		["expression", "questionmark", "statement"],
+		["block", "questionmark", "statement"],
+		["assignment", "questionmark", "statement"],
+		["statement", "questionmark", "statement"],
+	],
 	"constant": [
 		["quotedString"],
 		["number"]
@@ -142,18 +146,16 @@ const rules = {
 }
 
 
-
-
+// variablen in Map  bzw deklaration von variablen ueberpruefen
 
 function parseOgnl(startingToken) {
-
 
 	// check if is terminal
 	if (!rules[startingToken.name]) {
 		return
 	}
 
-	let remainingString = startingToken.value
+	let remainingString = ignoreChars(startingToken.value).remaining
 
 	// looping through the options and if find one 
 	rules[startingToken.name].map((option) => {
@@ -163,32 +165,29 @@ function parseOgnl(startingToken) {
 		// loop through the options and try to parse it into it's tokens
 		for (let i = 0; i < option.length; i++) {
 
-
-			// console.log("invalid call function: ", ognlParsers[option[i]])
 			parseResult = ognlParsers[option[i]](remainingString)
-
 			// valid parse
 			if (parseResult.matched !== undefined) {
 				let token = tokens.get(option[i])(parseResult.matched)
 				remainingString = parseResult.remaining
-				// console.log(token)
+				
 				startingToken.children.push(token)
 				parseOgnl(token)
 			}
 		}
 	})
-
+	
 	// we have something left
-	if (remainingString !== '' && startingToken.value !== remainingString) {
-
+	if (ignoreChars(remainingString).remaining !== '' && startingToken.value !== remainingString) {
 		//check if its not relevant with ignore
 		startingToken.value = ignoreChars(remainingString).remaining
-		// console.log(startingToken)
 		parseOgnl(startingToken)
 	} else if (startingToken.value === remainingString) {
-		console.log(`can't parse: \n${startingToken.value}`)
+		throw Error(`can't parse: \n${startingToken.value}`)
 	}
 }
+
+const ognl = fs.readFileSync(`./ognl.txt`, { encoding: "utf-8" })
 
 const root = {
 	name: "ognl",
@@ -196,6 +195,7 @@ const root = {
 	children: []
 }
 
+// ToDo write rendering function to expand tree
 parseOgnl(root)
-// console.log(root.children[2].children[0].children[0])
+console.log(root)
 
