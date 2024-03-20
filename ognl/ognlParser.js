@@ -1,23 +1,9 @@
 const fs = require(`fs`)
-const path = require(`path`)
-const { parse, combineParser, whiteSpace, stringParser, oneOrMore, anyofChars, oneOrZero, orElseParser, resultSet } = require('../lib/parselib')
+const { parse, notParse, combineParser, whiteSpace, stringParser, oneOrMore, anyofChars, oneOrZero, orElseParser, resultSet } = require('../lib/parselib')
 const tokens = require('../lib/tokens')
 
-
-function excludeChars(...args) {
-	const chars = []
-	let char
-	for (let i = 0; i < 256; i++) {
-		char = String.fromCharCode(i)
-		if (args.indexOf(char) === -1) chars.push(char)
-	}
-	return anyofChars(...chars)
-}
-
-
-const nonControllCharackters = excludeChars('#', '(', ')', '?', '@', ':', '\n', '\r', '\t', '"', '\'', '=', ' ', ',')
-const unescapedChars = excludeChars('\n', '\r', '\t', '"', '\'')
-const noParenthesis = excludeChars('(', ')')
+const nonControllCharackters = notParse('#', '(', ')', '?', '@', ':', '\n', '\r', '\t', '"', '\'', '=', ' ', ',')
+const unescapedChars = notParse('\n', '\r', '\t', '"', '\'')
 const ignoreChars = oneOrMore(anyofChars(' ', '\t', '\n', '\r', ','))
 const questionmark = parse('?')
 const colon = parse(':')
@@ -42,48 +28,6 @@ const assignment = combineParser(variable, assignmentOperator, constant)
 const compare = [stringParser('=='), stringParser('!='), parse('<'), parse('>'), stringParser('<='), stringParser('>=')].reduce((a, b) => { return orElseParser(a, b) })
 const expression = combineParser(orElseParser(variable, constant), oneOrZero(whiteSpace), compare, oneOrZero(whiteSpace), orElseParser(variable, constant))
 const statement = combineParser([expression, block, assignment, variable, constant].reduce((a, b) => { return orElseParser(a, b) }), oneOrZero(whiteSpace), questionmark, oneOrZero(whiteSpace), [expression, block, assignment, variable, constant].reduce((a, b) => { return orElseParser(a, b) }))
-
-
-// parsing blocks...
-// enter block
-// find the closing tag of the block.... while counting opening and closing tags 
-// exit on ')'
-function block(input) {
-
-	// is it the start of a block?
-	const firstChar = parse('(')(input)
-	if (firstChar.matched === "") {
-		return errorSet('(', input[0], input)
-	}
-
-	// start counting tags
-	let openingTags = 1
-	let middlePart = oneOrZero(oneOrMore(noParenthesis))(firstChar.remaining)
-	let alreadyParsed = firstChar.matched
-	do {
-
-		alreadyParsed += middlePart.matched
-		// no closing tag
-		if (middlePart.remaining === '') {
-			return resultSet(')', "", middlePart.matched)
-		}
-
-		// counting tags
-		if (middlePart.remaining[0] === '(') {
-			openingTags++
-			alreadyParsed += '('
-		} else if (middlePart.remaining[0] === ')') {
-			openingTags--
-			alreadyParsed += ')'
-
-			if (openingTags === 0) {
-				return resultSet(alreadyParsed, middlePart.remaining.substr(1))
-			}
-		}
-		middlePart = oneOrZero(oneOrMore(noParenthesis))(middlePart.remaining.substr(1))
-
-	} while (openingTags > 0)
-}
 
 const ognlParsers = {
 	"assignment": assignment,

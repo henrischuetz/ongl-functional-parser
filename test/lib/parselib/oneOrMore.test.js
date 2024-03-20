@@ -1,4 +1,4 @@
-const { parse, oneOrMore, resultSet } = require('../../../lib/parselib')
+const { parse, oneOrMore, resultSet, notParse } = require('../../../lib/parselib')
 
 const aParseAll = oneOrMore(parse('a'))
 
@@ -24,4 +24,9 @@ test('parse multiple a\'s from aaab', ()=>{
 
 test('parse empty string', ()=>{
     expect(aParseAll('')).toStrictEqual(resultSet('a+', '', ''))
+})
+
+test('dont parse parenthesis for one or more chars', ()=>{
+    expect(oneOrMore(notParse('(', ')'))('abc'))
+    .toStrictEqual(resultSet('!()+','abc', ''))
 })

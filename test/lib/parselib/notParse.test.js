@@ -17,3 +17,7 @@ test('not parse empty string', ()=>{
 test('parse null', ()=>{
     expect(parseChar(null)).toStrictEqual(resultSet('!a', '', null))
 })
+
+test('parse null', ()=>{
+    expect(notParse('(', ')')('abc')).toStrictEqual(resultSet('!()', 'a', 'bc'))
+})
